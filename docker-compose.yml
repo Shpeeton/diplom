@@ -1,0 +1,83 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: app
+      MYSQL_USER: app
+      MYSQL_PASSWORD: pass
+    volumes:
+      - mysql_data:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password
+
+  postgresql:
+    image: postgres:13
+    container_name: postgresql
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: app
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  gate-simulator:
+    image: node:18-alpine
+    container_name: gate-simulator
+    working_dir: /app
+    volumes:
+      - ./gate-simulator:/app
+    ports:
+      - "9999:9999"
+    command: sh -c "npm install && npm install -g nodemon && npm start"
+
+  app-mysql:
+    image: eclipse-temurin:11-jre
+    container_name: app-mysql
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./aqa-shop.jar:/app/aqa-shop.jar
+      - ./application.properties:/app/application.properties
+    working_dir: /app
+    command: java -jar aqa-shop.jar
+    depends_on:
+      - mysql
+      - gate-simulator
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/app
+      - SPRING_DATASOURCE_USERNAME=app
+      - SPRING_DATASOURCE_PASSWORD=pass
+      - SPRING_CREDIT_GATE_URL=http://gate-simulator:9999/credit
+      - SPRING_PAYMENT_GATE_URL=http://gate-simulator:9999/payment
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+
+  app-postgresql:
+    image: eclipse-temurin:11-jre
+    container_name: app-postgresql
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./aqa-shop.jar:/app/aqa-shop.jar
+      - ./application.properties:/app/application.properties
+    working_dir: /app
+    command: java -jar aqa-shop.jar
+    depends_on:
+      - postgresql
+      - gate-simulator
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgresql:5432/app
+      - SPRING_DATASOURCE_USERNAME=app
+      - SPRING_DATASOURCE_PASSWORD=pass
+      - SPRING_CREDIT_GATE_URL=http://gate-simulator:9999/credit
+      - SPRING_PAYMENT_GATE_URL=http://gate-simulator:9999/payment
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.PostgreSQL10Dialect
+
+volumes:
+  mysql_data:
+  postgres_data:

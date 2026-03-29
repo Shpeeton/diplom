@@ -1,0 +1,5 @@
+pytest==7.4.0
+selenium==4.15.0
+allure-pytest==2.13.2
+pymysql==1.1.0
+pg8000==1.31.5
