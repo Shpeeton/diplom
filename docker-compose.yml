@@ -20,10 +20,11 @@ services:
       - "5432:5432"
     environment:
       POSTGRES_DB: app
-      POSTGRES_USER: app
-      POSTGRES_PASSWORD: pass
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d
 
   gate-simulator:
     image: node:18-alpine

@@ -1,6 +1,7 @@
 import pytest
 import allure
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from utils.db import Database
 
 
@@ -36,7 +37,9 @@ def db_and_url(request):
 
 @pytest.fixture
 def driver():
-    driver = webdriver.Chrome()
+    options = Options()
+    options.add_argument('--headless')
+    driver = webdriver.Chrome(options=options)
     driver.maximize_window()
     yield driver
     driver.quit()
